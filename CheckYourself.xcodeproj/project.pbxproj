@@ -7,11 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C00DE5051A743321001E546E /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C00DE5041A743321001E546E /* Images.xcassets */; };
 		C0727E001A738A8C0059D7C7 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0727DFF1A738A8C0059D7C7 /* AppDelegate.swift */; };
 		C0727E031A738A8C0059D7C7 /* CheckYourself.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = C0727E011A738A8C0059D7C7 /* CheckYourself.xcdatamodeld */; };
 		C0727E051A738A8C0059D7C7 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0727E041A738A8C0059D7C7 /* ViewController.swift */; };
 		C0727E081A738A8C0059D7C7 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C0727E061A738A8C0059D7C7 /* Main.storyboard */; };
-		C0727E0A1A738A8C0059D7C7 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C0727E091A738A8C0059D7C7 /* Images.xcassets */; };
 		C0727E0D1A738A8C0059D7C7 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = C0727E0B1A738A8C0059D7C7 /* LaunchScreen.xib */; };
 		C0727E191A738A8C0059D7C7 /* CheckYourselfTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0727E181A738A8C0059D7C7 /* CheckYourselfTests.swift */; };
 /* End PBXBuildFile section */
@@ -27,13 +27,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C00DE5041A743321001E546E /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		C0727DFA1A738A8C0059D7C7 /* CheckYourself.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CheckYourself.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0727DFE1A738A8C0059D7C7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C0727DFF1A738A8C0059D7C7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C0727E021A738A8C0059D7C7 /* CheckYourself.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = CheckYourself.xcdatamodel; sourceTree = "<group>"; };
 		C0727E041A738A8C0059D7C7 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		C0727E071A738A8C0059D7C7 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		C0727E091A738A8C0059D7C7 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		C0727E0C1A738A8C0059D7C7 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
 		C0727E121A738A8C0059D7C7 /* CheckYourselfTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CheckYourselfTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0727E171A738A8C0059D7C7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -79,10 +79,10 @@
 		C0727DFC1A738A8C0059D7C7 /* CheckYourself */ = {
 			isa = PBXGroup;
 			children = (
+				C00DE5041A743321001E546E /* Images.xcassets */,
 				C0727DFF1A738A8C0059D7C7 /* AppDelegate.swift */,
 				C0727E041A738A8C0059D7C7 /* ViewController.swift */,
 				C0727E061A738A8C0059D7C7 /* Main.storyboard */,
-				C0727E091A738A8C0059D7C7 /* Images.xcassets */,
 				C0727E0B1A738A8C0059D7C7 /* LaunchScreen.xib */,
 				C0727E011A738A8C0059D7C7 /* CheckYourself.xcdatamodeld */,
 				C0727DFD1A738A8C0059D7C7 /* Supporting Files */,
@@ -195,9 +195,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C00DE5051A743321001E546E /* Images.xcassets in Resources */,
 				C0727E081A738A8C0059D7C7 /* Main.storyboard in Resources */,
 				C0727E0D1A738A8C0059D7C7 /* LaunchScreen.xib in Resources */,
-				C0727E0A1A738A8C0059D7C7 /* Images.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

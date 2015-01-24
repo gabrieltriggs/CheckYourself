@@ -10,135 +10,129 @@ import UIKit
 import CoreData
 
 class ViewController: UIViewController {
+    
+    var currentBloodAlcoholContent: Double = 0.0 {
+        didSet {
+            BACLabel.text = String(format: "%01.3f", currentBloodAlcoholContent)
+            updateTime()
+            if (currentBloodAlcoholContent < 0.001) {
+                //set timestamp to nil
+                var defaults = NSUserDefaults.standardUserDefaults()
+                defaults.setObject(nil, forKey: "timestamp")
+                countdownLabel.text? = "Too late."
+            }
+        }
+    }
+    
+    var timer: NSTimer!
 
-    @IBOutlet weak var beerButton: UIButton!
-    @IBOutlet weak var liquorButton: UIButton!
-    @IBOutlet weak var wineButton: UIButton!
-    @IBOutlet weak var BACButton: UIButton!
-    @IBOutlet weak var statsButton: UIButton!
-    @IBOutlet weak var listButton: UIButton!
-    @IBOutlet weak var clearButton: UIButton!
+
+    @IBOutlet weak var BACLabel: UILabel!
+    @IBOutlet weak var countdownLabel: UILabel!
     
-    @IBAction func pressBACButton(sender: AnyObject) {
-        logButtonPress(sender)
-    }
-    
-    @IBAction func pressBeerButton(sender: AnyObject) {
-        logButtonPress(sender)
-        insertDrinkRecord(beverage: "beer")
-    }
-    
-    @IBAction func pressClearButton(sender: AnyObject) {
-        logButtonPress(sender)
-        promptToClearDrinkEntries()
-    }
-    
-    @IBAction func pressLiquorButton(sender: AnyObject) {
-        logButtonPress(sender)
-        insertDrinkRecord(beverage: "liquor")
-    }
-    
-    @IBAction func pressListButton(sender: AnyObject) {
-        logButtonPress(sender)
-        dumpDrinkLog()
-    }
-    
-    @IBAction func pressStatsButton(sender: AnyObject) {
-        logButtonPress(sender)
-    }
-    
-    @IBAction func pressWineButton(sender: AnyObject) {
-        logButtonPress(sender)
-        insertDrinkRecord(beverage: "wine")
-    }
-    
-    func clearDrinkEntries() {
-        let appDelegate = UIApplication.sharedApplication().delegate as AppDelegate
-        let managedContext = appDelegate.managedObjectContext!
-        let fetchRequest = NSFetchRequest(entityName: "Drink")
-        fetchRequest.includesPropertyValues = false
-        var error: NSError?
-        let fetchedResults = managedContext.executeFetchRequest(fetchRequest, error: &error) as [NSManagedObject]?
+    @IBAction func pressDrinkButton(sender: AnyObject) {
+        var defaults = NSUserDefaults.standardUserDefaults()
         
-        if let results = fetchedResults {
-            for drinkRecord in results {
-                managedContext.deleteObject(drinkRecord)
-            }
+        
+        let timestamp = defaults.objectForKey("timestamp") as? NSDate
             
-            var error: NSError?
-            if !managedContext.save(&error) {
-                NSLog("%@", "Unable to delete records - \(error?.userInfo).")
-            } else {
-                NSLog("%@", "Deleted all drink entries.")
-            }
+        if timestamp == nil {
+            defaults.setObject(NSDate(), forKey: "timestamp")
         }
+        
+        let count = defaults.integerForKey("count")
+        defaults.setInteger(count + 1, forKey: "count")
+        
+        updateBAC()
     }
     
-    func dumpDrinkLog() {
-        let appDelegate = UIApplication.sharedApplication().delegate as AppDelegate
-        let managedContext = appDelegate.managedObjectContext!
-        let fetchRequest = NSFetchRequest(entityName: "Drink")
-        var error: NSError?
-        let fetchedResults = managedContext.executeFetchRequest(fetchRequest, error: &error) as [NSManagedObject]?
+    @IBAction func reset(sender: AnyObject) {
+        let defaults = NSUserDefaults.standardUserDefaults()
+        defaults.setObject(nil, forKey: "timestamp")
+        defaults.setInteger(0, forKey: "count")
+        BACLabel.text? = "0.000"
+        countdownLabel.text? = "Too late."
+    }
+    
+    override func viewDidAppear(animated: Bool) {
+        timer = NSTimer(timeInterval: 10.0, target: self, selector: "updateBAC", userInfo: nil, repeats: true)
+        NSRunLoop.mainRunLoop().addTimer(timer, forMode: NSRunLoopCommonModes)
+    }
+    
+    override func prefersStatusBarHidden() -> Bool {
+        return true
+    }
+    
+    func calculateBAC(#standardDrinks: Int, sex: String, bodyWeight_kg: Double, drinkingPeriod_hrs: Double) -> Double {
+        // 0.806 * SD * 1.2
+        // ---------------- - (MR * DP)
+        //     BW * Wt
+        //
+        // where
+        //  SD = number of standard drinks (10 g ethanol each)
+        //  BW = body water constant (men -> 0.58, women -> 0.49)
+        //  Wt = body weight (kg)
+        //  MR = metabolism constant (men -> 0.015, women -> 0.017)
+        //  DP = drinking period (hrs)
+        //
+        // pulled from wikipedia page on BAC
         
-        if let results = fetchedResults {
-            let timestampFormatter = NSDateFormatter()
-            timestampFormatter.dateStyle = NSDateFormatterStyle.ShortStyle
-            timestampFormatter.timeStyle = NSDateFormatterStyle.MediumStyle
-            
-            var timestamp: String!
-            var beverage: String!
-            for drinkRecord in results {
-                timestamp = timestampFormatter.stringFromDate(drinkRecord.valueForKey("timestamp") as NSDate)
-                beverage = drinkRecord.valueForKey("beverage") as String?
-                NSLog("%@", "\(beverage): \(timestamp)")
-            }
+        var BAC = 0.806 * Double(standardDrinks) * 1.2
+        BAC /= sex.caseInsensitiveCompare("f") == NSComparisonResult.OrderedSame ? 0.49 : 0.58
+        BAC /= bodyWeight_kg
+        var n = (sex.caseInsensitiveCompare("f") == NSComparisonResult.OrderedSame ? 0.017 : 0.015) * drinkingPeriod_hrs
+        BAC -= n
+        
+        // don't let BAC go negative (or below displayable value)
+        if BAC < 0.001 {
+            BAC = 0
+        }
+        
+        return BAC
+    }
+    
+    func updateBAC() {
+        var defaults = NSUserDefaults.standardUserDefaults()
+        let count = defaults.integerForKey("count")
+        if count == 0 {
+            return
+        }
+        let sex = defaults.objectForKey("sex") as String!
+        let weight = defaults.doubleForKey("weight")
+        
+        let now = NSDate()
+        let timestamp = defaults.objectForKey("timestamp") as NSDate!
+        let hours = Double(now.timeIntervalSinceDate(timestamp)) / 3600.0
+
+        var BAC = calculateBAC(standardDrinks: count, sex: sex, bodyWeight_kg: weight, drinkingPeriod_hrs: hours)
+        currentBloodAlcoholContent = BAC
+    }
+    
+    func updateTime() {
+        if currentBloodAlcoholContent != 0 {
+            let numHours = currentBloodAlcoholContent / 0.015
+            NSLog("%@", "\(numHours)")
+            let hourStr = String(format: "%02.0f", numHours)
+            NSLog("%@", hourStr)
+            let minStr = String(format: "%02.0f", (numHours % 1) * 60)
+            countdownLabel.text? = "\(hourStr):\(minStr)"
         } else {
-            NSLog("%@", "Error reading drink records - \(error?.userInfo)")
+            countdownLabel.text? = "Too late."
         }
-    }
-    
-    func insertDrinkRecord(#beverage: String) {
-        let appDelegate = UIApplication.sharedApplication().delegate as AppDelegate
-        let managedContext = appDelegate.managedObjectContext!
-        
-        let entity = NSEntityDescription.entityForName("Drink", inManagedObjectContext: managedContext)
-        let drink = NSManagedObject(entity: entity!, insertIntoManagedObjectContext: managedContext)
-        
-        drink.setValue(beverage, forKey: "beverage")
-        let timestamp = NSDate()
-        drink.setValue(timestamp, forKey: "timestamp")
-        
-        var error: NSError?
-        if !managedContext.save(&error) {
-            NSLog("%@", "Could not save \(error) - \(error?.userInfo).")
-        } else {
-            NSLog("%@", "Inserted \(beverage) entry.")
-        }
-    }
-    
-    func logButtonPress(sender: AnyObject) {
-        let button = sender as UIButton
-        let buttonTitleLabel = button.titleLabel as UILabel!
-        let buttonTitleLabelText = buttonTitleLabel.text as String!
-        
-        NSLog("%@", "User pressed \(buttonTitleLabelText) button.")
-    }
-    
-    func promptToClearDrinkEntries() {
-        var alert = UIAlertController(title: "Are you sure?", message: "All drink records will be deleted.", preferredStyle: .Alert)
-        alert.addAction(UIAlertAction(title: "Delete Records", style: .Default, handler: { action in
-            self.clearDrinkEntries()
-        }))
-        alert.addAction(UIAlertAction(title: "Cancel", style: .Cancel, handler: { action in
-            NSLog("%@", "Canceled deletion.")
-        }))
-        presentViewController(alert, animated: true, completion: nil)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        var defaults = NSUserDefaults.standardUserDefaults()
+        if defaults.objectForKey("sex") == nil {
+            defaults.setObject("m", forKey: "sex")
+        }
+        if defaults.objectForKey("weight") == nil {
+            defaults.setDouble(80, forKey: "weight")
+        }
+        let count = defaults.integerForKey("count")
+        updateBAC()
     }
 
     override func didReceiveMemoryWarning() {
